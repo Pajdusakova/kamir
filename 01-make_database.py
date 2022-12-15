@@ -1,5 +1,7 @@
 import sqlite3
 
+# 使用するエキスパンションをここで指定しておく
+# TODO: あとで外部ファイルとかで管理するかも
 ALLOW_LIST = ['LEA', '2ED', 'ARN', 'ATQ', '3ED', 'LEG', 'DRK', 'PHPR', 'FEM',
               '4ED', 'ICE', 'HML', 'ALL', 'MIR', 'VIS', '5ED', 'POR', 'WTH',
               'TMP', 'STH', 'EXO', 'P02', 'USG', 'ULG', '6ED', 'UDS', 'S99',
@@ -15,13 +17,15 @@ ALLOW_LIST = ['LEA', '2ED', 'ARN', 'ATQ', '3ED', 'LEG', 'DRK', 'PHPR', 'FEM',
               'DOM', 'BBD', 'GS1', 'M19', 'C18', 'GRN', 'GNT', 'G18', 'RNA',
               'WAR', 'MH1', 'M20', 'C19', 'ELD', 'GN2', 'THB', 'C20', 'IKO',
               'M21', 'JMP', 'ZNR', 'ZNC', 'CMR', 'KHM', 'KHC', 'STX', 'C21',
-              'MH2', 'AFR', 'AFC', 'SLD']
+              'MH2', 'AFR', 'AFC', 'MID', 'MIC', 'VOW', 'VOC', 'NEO', 'NEC',
+              'SNC', 'NCC', 'CLB', 'DMU', '40K', 'UNF', 'GN3', 'BRO', 'J22',
+              'SLD'] # ONE, ONC
 
 path_db_orig = './data/db/AllPrintings.sqlite'
 path_db_kamir = './data/db/kamir_cardpool.sqlite'
 
 def make_database():
-    # データ作成用のsqliteデータベースを作成する
+    # データ作成用にデータをかいつまんだsqliteデータベースを作成する
     conn = sqlite3.connect(path_db_kamir)
     cur = conn.cursor()
     
@@ -114,7 +118,7 @@ def make_database():
     #     SELECT
     #         name,
     #         name_image,
-    #         convertedManaCost,
+    #         manaValue,
     #         manaCost,
     #         REPLACE(type, '—', '-'),
     #         REPLACE(text, '•', '*'),
@@ -130,7 +134,7 @@ def make_database():
     #         SELECT
     #             COALESCE(c.asciiName, c.faceName, c.name) name,
     #             COALESCE(c.faceName, c.name) name_image,
-    #             c.convertedManaCost,
+    #             c.manaValue,
     #             c.manaCost,
     #             c.type,
     #             c.text,
@@ -170,7 +174,7 @@ def make_database():
         )
         SELECT
             name,
-            convertedManaCost,
+            manaValue,
             manaCost,
             REPLACE(type, '—', '-'),
             REPLACE(text, '•', '*'),
@@ -185,7 +189,7 @@ def make_database():
         (
             SELECT
                 COALESCE(c.asciiName, c.faceName, c.name) name,
-                c.convertedManaCost,
+                c.manaValue,
                 c.manaCost,
                 c.type,
                 c.text,
@@ -203,6 +207,7 @@ def make_database():
                 types LIKE "%Creature%"
                 AND (side = "a" OR side IS NULL)
                 AND printf("%d", c.number) == c.number
+                AND isFunny = 0
             ORDER BY e.id, c.name
         )
         GROUP BY name
@@ -212,13 +217,14 @@ def make_database():
     
     cur.execute("UPDATE main.cards SET oracle=REPLACE(oracle,\"â\",\"a\")")
     cur.execute("UPDATE main.cards SET oracle=REPLACE(oracle,\"á\",\"a\")")
+    # cur.execute("UPDATE main.cards SET oracle=REPLACE(oracle,\"à\",\"a\")") //  兄弟戦争現在Chicken à la Kingのみ該当、銀枠
     cur.execute("UPDATE main.cards SET oracle=REPLACE(oracle,\"í\",\"i\")")
     cur.execute("UPDATE main.cards SET oracle=REPLACE(oracle,\"ú\",\"u\")")
     cur.execute("UPDATE main.cards SET oracle=REPLACE(oracle,\"û\",\"u\")")
+    cur.execute("UPDATE main.cards SET oracle=REPLACE(oracle,\"ñ\",\"n\")")
     cur.execute("UPDATE main.cards SET oracle=REPLACE(oracle,\"ö\",\"o\")")
 
     conn.commit()
-    
     conn.close()
 
 

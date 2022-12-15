@@ -9,6 +9,7 @@ path_db_kamir = './data/db/kamir_cardpool.sqlite'
 data_img_dir = './data/img/'
 path_img_proxy = './no_image.jpg'
 
+# 人種差別的とされてイラストが削除されたカード
 ban_list = ['Crusade', 'Pradesh Gypsies', 'Stone-Throwing Devils']
 
 def fetch_image():
@@ -29,6 +30,7 @@ def fetch_image():
         mana_value = str(c[2])
         print(card_name)
         
+        # 上記に挙げたカードは代替の画像を差し込む
         if card_name in ban_list:
             save_path = data_img_dir + mana_value + '/' + card_name + ".jpg"
             img = cv2.imread(path_img_proxy, cv2.IMREAD_GRAYSCALE)
