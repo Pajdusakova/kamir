@@ -2,7 +2,7 @@ import sqlite3
 
 # 使用するエキスパンションをここで指定しておく
 # TODO: あとで外部ファイルとかで管理するかも
-ALLOW_LIST = ['LEA', '2ED', 'ARN', 'ATQ', '3ED', 'LEG', 'DRK', 'PHPR', 'FEM',
+ALLOW_LIST = ['LEA', '2ED', 'ARN', 'ATQ', '3ED', 'LEG', 'PDRC', 'DRK', 'PHPR', 'FEM',
               '4ED', 'ICE', 'HML', 'ALL', 'MIR', 'VIS', '5ED', 'POR', 'WTH',
               'TMP', 'STH', 'EXO', 'P02', 'USG', 'ULG', '6ED', 'UDS', 'S99',
               'PTK', 'MMQ', 'NEM', 'PCY', 'INV', 'PLS', '7ED', 'APC', 'ODY',
@@ -19,7 +19,7 @@ ALLOW_LIST = ['LEA', '2ED', 'ARN', 'ATQ', '3ED', 'LEG', 'DRK', 'PHPR', 'FEM',
               'M21', 'JMP', 'ZNR', 'ZNC', 'CMR', 'KHM', 'KHC', 'STX', 'C21',
               'MH2', 'AFR', 'AFC', 'MID', 'MIC', 'VOW', 'VOC', 'NEO', 'NEC',
               'SNC', 'NCC', 'CLB', 'DMU', '40K', 'UNF', 'GN3', 'BRO', 'J22',
-              'SLD'] # ONE, ONC
+              'SLD', 'SLX'] # ONE, ONC
 
 path_db_orig = './data/db/AllPrintings.sqlite'
 path_db_kamir = './data/db/kamir_cardpool.sqlite'
@@ -31,34 +31,15 @@ def make_database():
 
     cur.execute("ATTACH DATABASE '{}' AS source;".format(path_db_orig))
 
-    cur.execute("DROP TABLE IF EXISTS main.meta")
-    cur.execute("CREATE TABLE meta AS SELECT * FROM source.meta")
+    cur.execute("DROP TABLE IF EXISTS main.meta;")
+    cur.execute("CREATE TABLE meta AS SELECT * FROM source.meta;")
 
     # 元のDBを直接開いて確認するとき用のテーブル
     # cur.execute("DROP TABLE IF EXISTS main.cards_orig;")
     # cur.execute("CREATE TABLE main.cards_orig AS SELECT * FROM source.cards;")
 
     # cardsテーブルのスキーム設定
-    cur.execute("DROP TABLE IF EXISTS main.cards")
-    # cur.execute(
-    #     """
-    #     CREATE TABLE cards(
-    #         name STRING PRIMARY KEY,
-    #         name_image STRING,
-    #         mana_value INTEGER,
-    #         mana_cost STRING,
-    #         type STRING,
-    #         oracle TEXT,
-    #         expansion STRING,
-    #         expansion_id INTEGER,
-    #         power STRING,
-    #         toughness STRING,
-    #         layout STRING,
-    #         multiverse_id STRING,
-    #         release_date TEXT
-    #     )
-    #     """
-    # )
+    cur.execute("DROP TABLE IF EXISTS main.cards;")
     cur.execute(
         """
         CREATE TABLE cards(
@@ -72,7 +53,7 @@ def make_database():
             power STRING,
             toughness STRING,
             layout STRING,
-            multiverse_id STRING,
+            number INTEGER,
             release_date TEXT
         )
         """
@@ -86,6 +67,7 @@ def make_database():
             id integer primary key autoincrement,
             name string,
             name_code text,
+            base_set_size integer,
             release_date text
         )
         """
@@ -93,68 +75,10 @@ def make_database():
 
     # expansionsテーブルに使用するエキスパンション情報を挿入
     for exp in ALLOW_LIST:
-        query = 'INSERT INTO expansions(name, name_code, release_date) SELECT name, code, releaseDate FROM source.sets WHERE code = "{}"'.format(exp)
+        query = 'INSERT INTO expansions(name, name_code, base_set_size, release_date) SELECT name, code, baseSetSize, releaseDate FROM source.sets WHERE code = "{}"'.format(exp)
         cur.execute(query)
 
     # cardsテーブルに使用するカード情報を挿入
-    # cur.execute(
-    #     """
-    #     INSERT INTO cards
-    #     (
-    #         name,
-    #         name_image,
-    #         mana_value,
-    #         mana_cost,
-    #         type,
-    #         oracle,
-    #         expansion,
-    #         expansion_id,
-    #         power,
-    #         toughness,
-    #         layout,
-    #         multiverse_id,
-    #         release_date
-    #     )
-    #     SELECT
-    #         name,
-    #         name_image,
-    #         manaValue,
-    #         manaCost,
-    #         REPLACE(type, '—', '-'),
-    #         REPLACE(text, '•', '*'),
-    #         setCode,
-    #         id,
-    #         power,
-    #         toughness,
-    #         layout,
-    #         multiverseId,
-    #         release_date
-    #     FROM
-    #     (
-    #         SELECT
-    #             COALESCE(c.asciiName, c.faceName, c.name) name,
-    #             COALESCE(c.faceName, c.name) name_image,
-    #             c.manaValue,
-    #             c.manaCost,
-    #             c.type,
-    #             c.text,
-    #             c.setCode,
-    #             e.id,
-    #             c.power,
-    #             c.toughness,
-    #             c.layout,
-    #             c.multiverseId,
-    #             e.release_date
-    #         FROM source.cards c
-    #         INNER JOIN main.expansions e
-    #         ON c.setCode = e.name_code
-    #         WHERE types LIKE "%Creature%" AND (side = "a" OR side IS NULL)
-    #         ORDER BY e.id, c.name
-    #     )
-    #     GROUP BY name
-    #     ORDER BY id, name
-    #     """
-    # )
     cur.execute(
         """
         INSERT INTO cards
@@ -169,7 +93,7 @@ def make_database():
             power,
             toughness,
             layout,
-            multiverse_id,
+            number,
             release_date
         )
         SELECT
@@ -183,7 +107,7 @@ def make_database():
             power,
             toughness,
             layout,
-            multiverseId,
+            number,
             release_date
         FROM
         (
@@ -198,7 +122,7 @@ def make_database():
                 c.power,
                 c.toughness,
                 c.layout,
-                c.multiverseId,
+                c.number,
                 e.release_date
             FROM source.cards c
             INNER JOIN main.expansions e
@@ -208,9 +132,11 @@ def make_database():
                 AND (side = "a" OR side IS NULL)
                 AND printf("%d", c.number) == c.number
                 AND isFunny = 0
+                AND isReprint = 0
+                AND c.number <= e.base_set_size
+            GROUP BY c.name
             ORDER BY e.id, c.name
         )
-        GROUP BY name
         ORDER BY id, name
         """
     )
