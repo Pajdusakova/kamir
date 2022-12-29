@@ -34,8 +34,8 @@ def make_database():
     cur.execute("DROP TABLE IF EXISTS main.meta")
     cur.execute("CREATE TABLE meta AS SELECT * FROM source.meta")
 
-    # kamir_cardpool.sqliteを直接開いて確認するとき用のテーブル
-    # cur.execute("DROP TABLE IF EXISTS main.cards_orig")
+    # 元のDBを直接開いて確認するとき用のテーブル
+    # cur.execute("DROP TABLE IF EXISTS main.cards_orig;")
     # cur.execute("CREATE TABLE main.cards_orig AS SELECT * FROM source.cards;")
 
     # cardsテーブルのスキーム設定
@@ -215,6 +215,7 @@ def make_database():
         """
     )
 
+    # TODO: SQL文に埋め込んでるREPLACEをここに切り離す
     cur.execute("UPDATE main.cards SET oracle=REPLACE(oracle,\"â\",\"a\")")
     cur.execute("UPDATE main.cards SET oracle=REPLACE(oracle,\"á\",\"a\")")
     # cur.execute("UPDATE main.cards SET oracle=REPLACE(oracle,\"à\",\"a\")") //  兄弟戦争現在Chicken à la Kingのみ該当、銀枠

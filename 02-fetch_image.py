@@ -23,7 +23,7 @@ def fetch_image():
     conn.close()
     
     for c in cards:
-        time.sleep(1)
+        time.sleep(1) # 先方に負荷かけないようにウェイトを置く
         
         card_name = c[0]
         multiverse_id = str(c[1])
