@@ -28,12 +28,12 @@ def make_database():
     # データ作成用にデータをかいつまんだsqliteデータベースを作成する
     conn = sqlite3.connect(path_db_kamir)
     cur = conn.cursor()
-    
+
     cur.execute("ATTACH DATABASE '{}' AS source;".format(path_db_orig))
-    
+
     cur.execute("DROP TABLE IF EXISTS main.meta")
     cur.execute("CREATE TABLE meta AS SELECT * FROM source.meta")
-    
+
     # kamir_cardpool.sqliteを直接開いて確認するとき用のテーブル
     # cur.execute("DROP TABLE IF EXISTS main.cards_orig")
     # cur.execute("CREATE TABLE main.cards_orig AS SELECT * FROM source.cards;")
@@ -77,7 +77,7 @@ def make_database():
         )
         """
     )
-    
+
     # expansionsテーブルのスキーム設定
     cur.execute("DROP TABLE IF EXISTS main.expansions")
     cur.execute(
@@ -90,12 +90,12 @@ def make_database():
         )
         """
     )
-    
+
     # expansionsテーブルに使用するエキスパンション情報を挿入
     for exp in ALLOW_LIST:
         query = 'INSERT INTO expansions(name, name_code, release_date) SELECT name, code, releaseDate FROM source.sets WHERE code = "{}"'.format(exp)
         cur.execute(query)
-    
+
     # cardsテーブルに使用するカード情報を挿入
     # cur.execute(
     #     """
@@ -214,7 +214,7 @@ def make_database():
         ORDER BY id, name
         """
     )
-    
+
     cur.execute("UPDATE main.cards SET oracle=REPLACE(oracle,\"â\",\"a\")")
     cur.execute("UPDATE main.cards SET oracle=REPLACE(oracle,\"á\",\"a\")")
     # cur.execute("UPDATE main.cards SET oracle=REPLACE(oracle,\"à\",\"a\")") //  兄弟戦争現在Chicken à la Kingのみ該当、銀枠

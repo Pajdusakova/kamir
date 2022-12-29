@@ -29,15 +29,15 @@ def generate_pdf(i): # i means info
                  'expansion': i[6], 'text': i[7] or ''}
     card_pdf = canvas.Canvas(data_pdf_dir + '{0}/{1}.pdf'.format(card_info['mana_value'], card_info['name']))
     card_pdf.setPageSize((48.0*mm, 67.0*mm))
-    
+
     card_pdf.setStrokeColorRGB(0.8, 0.8, 0.8)
     card_pdf.setLineWidth(0.5)
     card_pdf.rect(0.5*mm, 0.5*mm, 47*mm, 66*mm)
-    
+
     card_pdf.setFont("Courier", 2.5*mm)
     card_pdf.drawRightString(47.5*mm, 64.3*mm, card_info['mana_cost'])
     card_pdf.drawString(0.8*mm, 61.8*mm, card_info['name'])
-    
+
     img = Image.open(data_img_dir + '{0}/{1}.jpg'.format(card_info['mana_value'], card_info['name']))
     card_pdf.drawInlineImage(img, 1*mm, 34*mm, 
                               width=46*mm, height=46*100/171*mm)
@@ -47,20 +47,20 @@ def generate_pdf(i): # i means info
     else:
         card_pdf.setFont("Courier", 2.15*mm)
         card_pdf.drawString(0.9*mm, 31.75*mm, card_info['type'])
-    
+
     card_pdf.line(1*mm, 30.75*mm, 47*mm, 30.75*mm)
 
     card_pdf.setFont("Courier", 2*mm)
     txt = card_pdf.beginText(1*mm, 29*mm)
     txt.setLeading(1.7*mm)
     txt.setCharSpace(-0.03*mm)
-    
+
     txt.textLines(textReshaper(card_info['text']))
     card_pdf.drawText(txt)
 
     card_pdf.setFont("Courier", 2*mm)
     card_pdf.drawString(1*mm, 1*mm, card_info['expansion'])
-    
+
     card_pdf.setFont("Courier-Bold", 2.5*mm)
     card_pdf.drawRightString(46.5*mm, 2*mm, 
                               card_info['power'] + '/' + card_info['toughness'])
@@ -70,13 +70,13 @@ def generate_pdf(i): # i means info
 def make_pdf():
     conn = sqlite3.connect(path_db_kamir)
     cur = conn.cursor()
-    
+
     cur.execute("SELECT name, mana_value, mana_cost, type, power, toughness, expansion, oracle FROM cards WHERE layout == \"normal\" OR layout == \"adventure\" OR layout == \"transform\" OR layout == \"meld\" OR layout == \"modal_dfc\" ORDER BY mana_value, name")
-    
+
     cards = cur.fetchall()
-    
+
     conn.close()
-    
+
     for c in cards:
         print(c[0]) # name
         generate_pdf(c)
